@@ -3,7 +3,7 @@ import SwiftUI
 enum OverlayPanel {
     static func create() -> NSPanel {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 240, height: 48),
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 48),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -18,7 +18,7 @@ enum OverlayPanel {
 
         if let screen = NSScreen.main {
             let frame = screen.visibleFrame
-            let x = frame.midX - 120
+            let x = frame.midX - 150
             let y = frame.maxY - 64
             panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
@@ -32,17 +32,25 @@ private struct OverlayContentView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Circle()
-                .fill(.red)
-                .frame(width: 10, height: 10)
-                .shadow(color: .red.opacity(0.6), radius: 4)
+            // Animated waveform bars
+            HStack(spacing: 2) {
+                ForEach(0..<5, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(.red)
+                        .frame(width: 3, height: max(4, CGFloat(state.audioLevels[i]) * 28))
+                        .animation(.interpolatingSpring(stiffness: 300, damping: 15), value: state.audioLevels[i])
+                }
+            }
+            .frame(height: 20)
 
             Text("Listening...")
                 .font(.system(size: 13, weight: .medium))
+                .fixedSize()
 
             Text(state.formattedDuration)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(.secondary)
+                .fixedSize()
 
             Button {
                 NotificationCenter.default.post(name: .cancelRecording, object: nil)
@@ -53,6 +61,7 @@ private struct OverlayContentView: View {
             }
             .buttonStyle(.plain)
         }
+        .fixedSize()
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))

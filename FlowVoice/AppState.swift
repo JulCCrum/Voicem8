@@ -7,6 +7,7 @@ final class AppState: ObservableObject {
     @Published var isRecording = false
     @Published var isTranscribing = false
     @Published var recordingDuration: TimeInterval = 0
+    @Published var audioLevels: [Float] = Array(repeating: 0, count: 5)
 
     var apiKey: String {
         get { UserDefaults.standard.string(forKey: "groqAPIKey") ?? "" }
