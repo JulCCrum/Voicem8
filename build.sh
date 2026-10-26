@@ -30,7 +30,7 @@ cp Resources/Info.plist "$CONTENTS/"
 codesign \
     --entitlements Resources/FlowVoice.entitlements \
     --force \
-    --sign - \
+    --sign "Solomon Code Signing" \
     "$APP_BUNDLE"
 
 echo ""

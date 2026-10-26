@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Self.debugLog("=== FlowVoice launched ===")
         Self.debugLog("API key set: \(!AppState.shared.apiKey.isEmpty)")
         requestAccessibilityIfNeeded()
+        requestInputMonitoringIfNeeded()
         requestMicrophoneAccess()
         setupHotkey()
 
@@ -34,6 +35,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
             AXIsProcessTrustedWithOptions(options)
             Self.debugLog("Prompted user for accessibility access")
+        }
+    }
+
+    private func requestInputMonitoringIfNeeded() {
+        let trusted = CGPreflightListenEventAccess()
+        Self.debugLog("Input monitoring trusted: \(trusted)")
+        if !trusted {
+            let prompted = CGRequestListenEventAccess()
+            Self.debugLog("Prompted user for input monitoring access, result: \(prompted)")
         }
     }
 
@@ -80,16 +90,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        AppState.shared.isRecording = true
+        AppState.shared.recordingDuration = 0
+
+        DispatchQueue.main.async {
+            self.showOverlay()
+            self.startTimer()
+            Self.debugLog("Overlay shown")
+        }
+
         do {
             try audioRecorder.start()
-            DispatchQueue.main.async {
-                AppState.shared.isRecording = true
-                AppState.shared.recordingDuration = 0
-                self.showOverlay()
-                self.startTimer()
-            }
+            Self.debugLog("Recording started successfully")
         } catch {
-            print("Recording failed: \(error)")
+            AppState.shared.isRecording = false
+            DispatchQueue.main.async {
+                self.stopTimer()
+                self.hideOverlay()
+            }
+            Self.debugLog("Recording failed: \(error)")
         }
     }
 
